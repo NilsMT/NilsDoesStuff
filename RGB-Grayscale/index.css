@@ -1,0 +1,80 @@
+.palette {
+}
+
+* {
+    font-family: 'ADLaM Display', cursive;
+    text-align: center;
+    color: #000000;
+}
+
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    gap: 5%;
+}
+
+.bigstuff {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.stuff {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#eq {
+    height: 75px;
+    width: 75px;
+    border-radius: 100%;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+}
+
+.container {
+    text-align: center;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    margin-top: 0;
+}
+
+#gray_scaleBox {
+    border: rgba(0, 0, 0, 0.5) solid 1px;
+    width: 90px;
+    height: 90px;
+}
+
+#color_colorPicker{
+    background-color: #0000;
+    width: 100px;
+    height: 103px;
+    border: none;
+}
+ .txt {
+    color: #00000070;
+    margin-bottom: 10px;
+ }
+
+ #txt-col {
+    margin-bottom: 10px;
+ }
+ .txt-how {
+    text-align: left;
+ }
