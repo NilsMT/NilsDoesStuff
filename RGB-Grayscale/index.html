@@ -43,15 +43,15 @@
     <div class="container">
         <h1 class="txt-how" id="howh">How it's calculated ?  ▼</h1> 
         <ul class="txt-how" id="how">
-            Well first our eyes are most sensitive to green, then red and finally blue. <br><br>
+            Well first our eyes are most sensitive to green, then red and blue. <br><br>
             So, by some wizardry we obtain ratios. Then we take the R,G and B of our color and make this calculation : <br><br>
             0.3 x R + 0.59 x G + 0.11 x B <br><br>
-            This allow us to get a number, that will be the same for R,G and B of our grayscaled color !
+            This allows us to get a number, that will be the same for R,G and B of our grayscaled color !
         </ul>
         <h1 class="txt-how" id="exh">Example</h1>
         <ul>
             <li class="txt-how" id="ex">0.3 x 255 + 0.59 x 255 + 0.11 x 255 ≃ 255</li>
-            <li class="txt-how" id="fin">RGB: 255 , 255 , 255</li>
+            <li class="txt-how" id="fin">RGB : 255 , 255 , 255</li>
         </ul>
     </div>
     <script>
@@ -99,7 +99,7 @@
             gray_rgbValue.textContent = `RGB: ${graytocolor_scaleColor.rgb}`;
 
             document.getElementById("ex").textContent = `0.3 x ${RGB.r} + 0.59 x ${RGB.g} + 0.11 x ${RGB.b} ≃ ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)}`
-            document.getElementById("fin").textContent = `RGB: ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)} , ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)} , ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)}`
+            document.getElementById("fin").textContent = `RGB : ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)} , ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)} , ${Math.floor(0.3 * RGB.r + 0.59 * RGB.g + 0.11 * RGB.b)}`
 
             document.getElementById("eq").style += `background: ${color_colorPicker.value};
             background: -moz-linear-gradient(90deg, ${color_colorPicker.value} 50%, ${graytocolor_scaleColor.hex} 50%);

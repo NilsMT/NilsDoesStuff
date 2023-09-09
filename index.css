@@ -4,6 +4,14 @@
     color: #000000;
 }
 
+a[wip] {
+    background: repeating-linear-gradient( -45deg, rgba(255, 217, 0, 0.5), rgba(255, 217, 0, 0.5) 10px, #0000008f 10px, #0000008f 20px);
+}
+a[wip]:hover {
+    box-shadow: 0px 0px 50px rgba(255, 217, 0, 1);
+    background-color: #ffffff;
+}
+
 h1 {
     z-index: 5;
 }
