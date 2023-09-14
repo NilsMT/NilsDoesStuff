@@ -1,0 +1,63 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ressources -->
+    <link rel="stylesheet" href="../css/rgb.css">
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/rgb/fav-icon.png">
+    <!--titre-->
+    <title>RGB vers Grayscale</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Grayscale to Color Converter</h1>
+        <div class="bigstuff">
+            <div id="input" class>
+                
+                <div class="stuff">
+                    <div class="txt" id="txt-col">Color</div>
+                    <input type="color" id="color_colorPicker" value="#ffffff">
+                    <div class="values" id="color_colorValues">
+                        <p id="color_hexValue">Hex: #ffffff</p>
+                        <p id="color_rgbValue">RGB: <r id="ri">255</r>, <g id="gi">255</g>, <b id="bi">255</b></p>
+                    </div>
+                </div>
+            </div>
+            <img src="../assets/rgb/eq.png" id="eq"></img>
+            <div id="output">
+                <div class="stuff">
+                    <div class="txt">Grayscale</div>
+                    <div id="gray_scaleBox"></div>
+                    <div class="values" id="gray_colorValues">
+                        <p id="gray_hexValue">Hex: #ffffff</p>
+                        <p id="gray_rgbValue">RGB: <r class="res">255</r>, <g class="res">255</g>, <b class="res">255</b></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container" id="howcont">
+        <h1>How it's calculated ?</h1> 
+        <p>
+            Well first our eyes are most sensitive to green, then red and blue. <br>
+            So, by some wizardry we obtain ratios. Then we take the <r>R</r>,<g>G</g> and <b>B</b> of our color and make this calculation :
+        </p>
+        <p>
+            0.3 x <r>R</r> + 0.59 x <g>G</g> + 0.11 x <b>B</b>
+        </p>
+        <p>
+            This allows us to get a number, that will be the same for R,G and B of our grayscaled color !
+        </p>
+        <h1>Example</h1>
+        <ul>
+            <li id="ex">0.3 x <r id="r">255</r> + 0.59 x <g id="g">255</g> + 0.11 x <b id="b">255</b> ≃ <span class="res">255</span></li>
+            <li id="fin">RGB : <r class="res">255</r> , <g class="res">255</g> , <b class="res">255</b></li>
+        </ul>
+    </div>
+    <script src="../js/rgb.js"></script>
+</body>
+</html>
