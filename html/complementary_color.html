@@ -1,0 +1,67 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ressources -->
+    <link rel="stylesheet" href="../css/rgb.css">
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/rgb/complementary_icon.png">
+    <!--titre-->
+    <title>RGB to Complementary</title>
+</head>
+<body>
+    <div class="container">
+        <h1>RGB to Complementary Converter</h1>
+        <div class="bigstuff">
+            <div id="input" class>
+                
+                <div class="stuff">
+                    <div class="txt" id="txt-col">Color</div>
+                    <input type="color" id="color_colorPicker" value="#ffffff">
+                    <div class="values" id="color_colorValues">
+                        <p id="input_hexValue">Hex: #ffffff</p>
+                        <p id="input_rgbValue">RGB: <r id="ri">255</r>, <g id="gi">255</g>, <b id="bi">255</b></p>
+                    </div>
+                </div>
+            </div>
+            <img src="../assets/rgb/eq.png" id="eq"></img>
+            <div id="output">
+                <div class="stuff">
+                    <div class="txt">Complementary Color</div>
+                    <div id="output_scaleBox"></div>
+                    <div class="values">
+                        <p id="output_hexValue">Hex: #ffffff</p>
+                        <p id="output_rgbValue">RGB: <r class="resr">255</r>, <g class="resg">255</g>, <b class="resb">255</b></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container" id="howcont">
+        <h1>What's a complementary color ?</h1> 
+        <p>
+            Its the color that is opposite to the color you choose. <br>
+            It allows you to get a color that will be in contrast (the most noticeable) with the one you choose.
+        </p>
+        <h1>How it's calculated ?</h1> 
+        <p>
+           We take the <r>R</r>,<g>G</g> and <b>B</b> of our color and make this calculation :
+        </p>
+        <p>
+            255 - <r>R</r>, 255 - <g>G</g>,  255 - <b>B</b>
+        </p>
+        <p>
+            This allows us to get the values for the complementary color !
+        </p>
+        <h1>Example</h1>
+        <ul>
+            <li id="ex">255 - <r id="r">255</r> = <span class="resr">255</span> | 255 - <g id="g">255</g> = <span class="resg">255</span> | 255 - <b id="b">255</b> = <span class="resb">255</span></li>
+            <li id="fin">RGB : <r class="resr">255</r>, <g class="resg">255</g>, <b class="resb">255</b></li>
+        </ul>
+    </div>
+    <script src="../js/complementary_color.js"></script>
+</body>
+</html>

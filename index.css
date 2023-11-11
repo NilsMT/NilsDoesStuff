@@ -70,3 +70,9 @@ h1 {
     color: #000000;
     -webkit-text-stroke: #000000 0px;
 }
+
+.preview {
+    width: 200%;
+    height: 112.5%;
+    border-radius: 10px;
+}
