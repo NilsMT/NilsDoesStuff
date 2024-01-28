@@ -60,6 +60,11 @@ color_colorPicker.addEventListener('input', () => {
     res.forEach(element => {
         element.textContent = result[2];
     });
+    //all
+    res = document.querySelectorAll(".restot");
+    res.forEach( element => {
+        element.textContent = result[1]
+    });
 
     //gradient on equal icon
     document.getElementById("eq").style += `background: ${color_colorPicker.value};
