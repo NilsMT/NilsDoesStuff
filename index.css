@@ -40,7 +40,7 @@
     -ms-user-select: none; /* IE 10+ */
     user-select: none; /* Standard syntax */
 
-    transition: background-color 0.2s ease, color 0.2s ease,var(--box-shadow) 0.2s ease
+    transition: background-color 0.2s ease, color 0.2s ease,box-shadow 0.2s ease
 }
 
 body {
@@ -137,6 +137,10 @@ header>button:hover,.themebutton:hover {
 /*-----------------*/
 /*section*/
 /*-----------------*/
+.nope:hover {
+    cursor:initial;
+}
+
 .flex-container {
     display: flex;
     flex-direction: row;
@@ -211,7 +215,11 @@ header>button:hover,.themebutton:hover {
     background:  var(--link-wip-bg);
 }
 
-
+@media (max-width:700px) {
+    header>button,.themebutton {
+        position: static;
+    }
+}
 
 
 

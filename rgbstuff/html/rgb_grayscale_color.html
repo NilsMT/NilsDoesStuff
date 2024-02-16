@@ -3,68 +3,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- ressources -->
-    <link rel="stylesheet" href="../css/rgb.css"> <!-- TODO : Update style so that it follow the other one-->
+    <link rel="stylesheet" href="../css/rgb.css">
     <!-- font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a0107e3e1b.js" crossorigin="anonymous"></script>
     <link rel="icon" type="image/x-icon" href="../assets/grayscale_icon.png">
     <!--titre-->
     <title>RGB to Grayscale</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Grayscale to Color Converter</h1>
-        <div class="bigstuff">
-            <div id="input" class>
-                
-                <div class="stuff">
-                    <div class="txt" id="txt-col">Color</div>
-                    <input type="color" id="color_colorPicker" value="#ffffff">
-                    <div class="values" id="color_colorValues">
-                        <p id="input_hexValue">Hex: #ffffff</p>
-                        <p id="input_rgbValue">RGB: <r id="ri">255</r>, <g id="gi">255</g>, <b id="bi">255</b></p>
+    <!--
+        .boite -> .boite
+        .color_input_output -> .color_input_output
+        .color_box -> .color_box
+
+    -->
+    <header>
+        <a class="boite wip" href="../index.html">Retour à l'accueil</a>
+        <div class="boite">Thème : </div>
+        <i id="icon" class="boite fa-solid fa-moon themebutton" aria-hidden="true"></i>
+    </header>
+    <div class="boite flex-container">
+        <div class="boite flex-item">
+            <h1 class="boite">Grayscale to Color Converter</h1>
+            <div class="color_input_output">
+                <div id="input" class>
+                    
+                    <div class="color_box">
+                        <div class="txt">Color</div>
+                        <input type="color" id="color_colorPicker" value="#ffffff">
+                        <div class="values" id="color_colorValues">
+                            <p id="input_hexValue">Hex: #ffffff</p>
+                            <p id="input_rgbValue">RGB: <r id="ri">255</r>, <g id="gi">255</g>, <b id="bi">255</b></p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <img src="../assets/eq.png" id="eq"></img>
-            <div id="output">
-                <div class="stuff">
-                    <div class="txt">Grayscale</div>
-                    <div id="output_scaleBox"></div>
-                    <div class="values">
-                        <p id="output_hexValue">Hex: #ffffff</p>
-                        <p id="output_rgbValue">RGB: <r class="res resr">255</r>, <g class="res resg">255</g>, <b class="res resb">255</b></p>
+                <img src="../assets/eq.png" id="eq"></img>
+                <div id="output">
+                    <div class="color_box">
+                        <div class="txt">Grayscale</div>
+                        <div id="output_scaleBox"></div>
+                        <div class="values">
+                            <p id="output_hexValue">Hex: #ffffff</p>
+                            <p id="output_rgbValue">RGB: <r class="res resr">255</r>, <g class="res resg">255</g>, <b class="res resb">255</b></p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="container" id="howcont">
-        <h1>What's a grayscaled color ?</h1> 
-        <p>
-            Its the color that is the same in grayscale. <br>
-            It allow you to know how your color will look if the saturation is set to 0, <br>
-            when you print something only in black and white for example.
-        </p>
-        <h1>How it's calculated ?</h1> 
-        <p>
-            Our eyes are most sensitive to green, then red and blue. <br>
-            So, we obtain ratios according to that sensitivity (0.3 for red, 0.59 for green and 0.11 for blue). <br>
-            Then we take the <r>R</r>,<g>G</g> and <b>B</b> of our color and make this calculation :
-        </p>
-        <p>
-            0.3 x <r>R</r> + 0.59 x <g>G</g> + 0.11 x <b>B</b>
-        </p>
-        <p>
-            This allows us to get a number, that will be the same for R,G and B of our grayscaled color !
-        </p>
-        <h1>Example</h1>
-        <ul>
-            <li id="ex">0.3 x <r id="r">255</r> + 0.59 x <g id="g">255</g> + 0.11 x <b id="b">255</b> ≃ <span class="res restot">255</span></li>
-            <li id="fin">RGB : <r class="res resr">255</r>, <g class="res resg">255</g>, <b class="res resb">255</b></li>
-        </ul>
+        <div class="boite flex-item" id="howcont">
+            <h1 class="boite">What's a grayscaled color ?</h1> 
+            <p>
+                Its the color that is the same in grayscale. <br>
+                It allow you to know how your color will look if the saturation is set to 0, <br>
+                when you print something only in black and white for example.
+            </p>
+            <h1 class="boite">How it's calculated ?</h1> 
+            <p>
+                Our eyes are most sensitive to green, then red and blue. <br>
+                So, we obtain ratios according to that sensitivity (0.3 for red, 0.59 for green and 0.11 for blue). <br>
+                Then we take the <r>R</r>,<g>G</g> and <b>B</b> of our color and make this calculation :
+            </p>
+            <p>
+                0.3 x <r>R</r> + 0.59 x <g>G</g> + 0.11 x <b>B</b>
+            </p>
+            <p>
+                This allows us to get a number, that will be the same for R,G and B of our grayscaled color !
+            </p>
+            <h1 class="boite">Example</h1>
+            <ul>
+                <li id="ex">0.3 x <r id="r">255</r> + 0.59 x <g id="g">255</g> + 0.11 x <b id="b">255</b> ≃ <span class="res restot">255</span></li>
+                <li id="fin">RGB : <r class="res resr">255</r>, <g class="res resg">255</g>, <b class="res resb">255</b></li>
+            </ul>
+        </div>
     </div>
     <script src="../js/rgb_to_grayscale.js"></script>
+    <!-- theme -->
+    <script type="module" src="../../js/theme_manager.js"></script>
 </body>
 </html>

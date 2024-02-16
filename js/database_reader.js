@@ -35,7 +35,7 @@ Website.addSite("oldport","Ancien Portfolio","https://nilsmt.github.io/Portfolio
 
 Website.addSite("port","Portfolio","https://nilsmt.github.io/Portfolio/",Category.Site,"Mon portfolio",["HTML","JS","CSS"])
 
-Website.addSite("justflickit","Just Flick It !","https://nilsmt.github.io/NilsDoesStuffs/html/switch.html",Category.Game,"Un jeu que je développe",["Unity","C#","WIP"])
+Website.addSite("justflickit","Just Flick It !","html/switch.html",Category.Game,"Un jeu que je développe",["Unity","C#","WIP"])
 
 Website.addSite("pastek","Pastek","https://scratch.mit.edu/projects/825278397/",Category.Game,"Un jeu fait au collège",["Scratch"])
 
@@ -77,11 +77,16 @@ function createfilter(list) {
         containerDiv.appendChild(span);
         header.appendChild(containerDiv)
         input.addEventListener('change', function(){
+            input.checked = !input.checked
             if (input.checked) {
                 grantedtaglist.add(input.getAttribute('tag'))
             } else {
                 grantedtaglist.delete(input.getAttribute('tag'))
             }
+        })
+
+        containerDiv.addEventListener("click",function(){
+            input.checked = !input.checked
         })
     })
     
@@ -115,6 +120,7 @@ function read(list) {
         const b = document.createElement("div")
         b.classList.add("flex-item")
         b.classList.add("boite")
+        b.classList.add("nope")
 
         const nope = document.createElement("div")
         nope.textContent = "Il n'y a rien à afficher"
@@ -146,7 +152,7 @@ function read(list) {
             const title = document.createElement("h1")
             title.classList.add("boite")
             title.classList.add(catename)
-            title.textContent=catename+" 🡖"
+            title.textContent=catename+" ↘️"
             //create box
             const box = document.createElement("div")
             box.classList.add("flex-container")
@@ -245,12 +251,12 @@ function createcollapsingeffect() {
                 content.style.display='none'
 
                 const txt = button.textContent.slice(0, button.textContent.length-2)
-                button.textContent = txt+"🡔"
+                button.textContent = txt+"↖️"
             } else {
                 content.style.display='flex'
 
                 const txt = button.textContent.slice(0, button.textContent.length-2)
-                button.textContent = txt+"🡖"
+                button.textContent = txt+"↘️"
             }
         });
     });

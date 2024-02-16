@@ -2,8 +2,10 @@ let db = []
 let taglist = new Set()
 let idlist = []
 const Category = {
-    Site:"Site",
+    Site :"Site",
+    Game :"Jeu-vidéo",
     Other : "Autre",
+    Social : "Social"
 }
 class Website {
     constructor(id,main_name,link,category,additionnal_text,tags) {
@@ -27,9 +29,9 @@ class Website {
     }
 }
 
-Website.addSite("gray","RGB to Grayscale","html/rgb_complementary_color.html",Category.Site,"Transforme une couleur RGB en une couleur en niveaux de gris",["Échelle de gris"])
+Website.addSite("gray","RGB to Grayscale","html/rgb_grayscale_color.html",Category.Site,"Transforme une couleur RGB en une couleur en niveaux de gris",["Échelle de gris"])
 
-Website.addSite("comp","RGB to Complementary","html/rgb_grayscale_color.html",Category.Site,"Transforme une couleur RGB en sa couleur complémentaire",["Complémentaire"])
+Website.addSite("comp","RGB to Complementary","html/rgb_complementary_color.html",Category.Site,"Transforme une couleur RGB en sa couleur complémentaire",["Complémentaire"])
 
 //////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////READER
@@ -57,11 +59,16 @@ function createfilter(list) {
         containerDiv.appendChild(span);
         header.appendChild(containerDiv)
         input.addEventListener('change', function(){
+            input.checked = !input.checked
             if (input.checked) {
                 grantedtaglist.add(input.getAttribute('tag'))
             } else {
                 grantedtaglist.delete(input.getAttribute('tag'))
             }
+        })
+
+        containerDiv.addEventListener("click",function(){
+            input.checked = !input.checked
         })
     })
     
@@ -95,6 +102,7 @@ function read(list) {
         const b = document.createElement("div")
         b.classList.add("flex-item")
         b.classList.add("boite")
+        b.classList.add("nope")
 
         const nope = document.createElement("div")
         nope.textContent = "Il n'y a rien à afficher"
@@ -126,7 +134,7 @@ function read(list) {
             const title = document.createElement("h1")
             title.classList.add("boite")
             title.classList.add(catename)
-            title.textContent=catename+" 🡖"
+            title.textContent=catename+" ↘️"
             //create box
             const box = document.createElement("div")
             box.classList.add("flex-container")
@@ -162,6 +170,7 @@ function read(list) {
                     link.classList.add("flex-item")
                     link.classList.add("boite")
                     link.setAttribute("id",site.id)
+                    link.setAttribute("image_preview",site.image_preview_link)
     
                     if (site.tags.includes("WIP")) { //if there is the tag wip add the so-called class
                         link.classList.add("wip")
@@ -225,12 +234,12 @@ function createcollapsingeffect() {
                 content.style.display='none'
 
                 const txt = button.textContent.slice(0, button.textContent.length-2)
-                button.textContent = txt+"🡔"
+                button.textContent = txt+"↖️"
             } else {
                 content.style.display='flex'
 
                 const txt = button.textContent.slice(0, button.textContent.length-2)
-                button.textContent = txt+"🡖"
+                button.textContent = txt+"↘️"
             }
         });
     });
