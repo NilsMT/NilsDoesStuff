@@ -35,7 +35,7 @@ Website.addSite("oldport","Ancien Portfolio","https://nilsmt.github.io/Portfolio
 
 Website.addSite("port","Portfolio","https://nilsmt.github.io/Portfolio/",Category.Site,"Mon portfolio",["HTML","JS","CSS"])
 
-Website.addSite("justflickit","Just Flick It !","html/switch.html",Category.Game,"Un jeu que je développe",["Unity","C#","WIP"])
+Website.addSite("justflickit","Just Flick It !","html/flick.html",Category.Game,"Un jeu que je développe",["Unity","C#","WIP"])
 
 Website.addSite("pastek","Pastek","https://scratch.mit.edu/projects/825278397/",Category.Game,"Un jeu fait au collège",["Scratch"])
 
