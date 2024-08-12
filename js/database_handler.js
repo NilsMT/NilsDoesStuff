@@ -17,6 +17,8 @@ export class Website {
             database.taglist.add(tag)
         });
 
+        database.taglist.add(category)
+
         database.idlist.push(id)
     }
 
@@ -37,6 +39,9 @@ export class Database {
 
     add(website) {
         this.db.push(website)
+
+        /* sort */
+        this.taglist = new Set(Array.from(this.taglist).sort())
     }
 
     selectall() {
@@ -115,7 +120,7 @@ export function updatefilter(grantTags) { //only select the proper elements
     console.log(database.grantedtaglist)
     const filteredDB = database.db.filter(element => {
         // Check if at least one tag in the element's 'tags' array exists in 'grantTags'
-        return element.tags.some(t => grantTags.has(t));
+        return element.tags.some(t => grantTags.has(t)) || grantTags.has(element.category);
     });
     console.log(filteredDB)
     read(filteredDB)

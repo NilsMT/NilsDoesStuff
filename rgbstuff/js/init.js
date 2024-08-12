@@ -1,4 +1,4 @@
-import * as dbh from './database_handler.js'
+import * as dbh from '../../js/database_handler.js'
 
 let database = new dbh.Database()
 

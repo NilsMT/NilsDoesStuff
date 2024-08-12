@@ -108,8 +108,16 @@ header>button:hover,.themebutton:hover {
     cursor: pointer;
 }
 
-.filter-title {
+#select_all:hover {
+    cursor: pointer;
+}
 
+#select_all {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
 .filter-tag {
@@ -180,7 +188,7 @@ header>button:hover,.themebutton:hover {
     opacity: 0.75;
 }
 
-.tags {
+.tags, #select_all_sub {
     font-size:small; 
     opacity: 0.5;
 }
