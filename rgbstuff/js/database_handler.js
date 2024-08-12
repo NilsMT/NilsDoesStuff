@@ -1,13 +1,7 @@
-let db = []
-let taglist = new Set()
-let idlist = []
-const Category = {
+export const Category = {
     Site :"Site",
-    Game :"Jeu-vidéo",
-    Other : "Autre",
-    Social : "Social"
 }
-class Website {
+export class Website {
     constructor(id,main_name,link,category,additionnal_text,tags) {
         this.id = id
         this.main_name = main_name
@@ -17,59 +11,94 @@ class Website {
         this.tags = tags
 
         tags.forEach(tag => {
-            taglist.add(tag)
+            database.taglist.add(tag)
         });
 
-        idlist.push(id)
+        database.idlist.push(id)
     }
 
     static addSite(id, main_name, link, category, additionnal_text, tags) {
         console.log("======= Added : "+main_name+", "+category)
-        db.push(new Website(id, main_name, link, category, additionnal_text, tags))
+        database.add(new Website(id, main_name, link, category, additionnal_text, tags))
     }
 }
 
-Website.addSite("gray","RGB to Grayscale","html/rgb_grayscale_color.html",Category.Site,"Transforme une couleur RGB en une couleur en niveaux de gris",["Échelle de gris"])
+export class Database {
+    constructor() {
+        this.db = []
+        this.taglist = new Set()
+        this.idlist = []
+        this.grantedtaglist = new Set()
+        this.allselected = false
+    }
 
-Website.addSite("comp","RGB to Complementary","html/rgb_complementary_color.html",Category.Site,"Transforme une couleur RGB en sa couleur complémentaire",["Complémentaire"])
+    add(website) {
+        this.db.push(website)
+    }
+
+    selectall() {
+        this.allselected = !this.allselected
+        document.querySelectorAll(".filter-tag>input[type='checkbox']").forEach(checkbox => {
+            if (checkbox.checked != this.allselected) {
+                checkbox.click()
+            }
+        })
+    }
+}
+
+var database = null
+
+export function setDB(new_db) {
+    database = new_db
+}
 
 //////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////READER
+///////////////////////////////////ELEMENT CREATOR
 //////////////////////////////////////////////////////////////////////////////
 
-function createfilter(list) {
+function createFilterElement(tag,parent) {
+    const containerDiv = document.createElement('div');
+    containerDiv.classList.add('filter-tag', 'boite');
+
+    // Create the input element
+    const input = document.createElement('input');
+    input.setAttribute('type', 'checkbox');
+    input.setAttribute('tag', tag);
+
+    // Create the span element
+    const span = document.createElement('span');
+    span.textContent = tag;
+
+    // Append input and span to the container div
+    containerDiv.appendChild(input);
+    containerDiv.appendChild(span);
+    parent.appendChild(containerDiv)
+
+    //events
+    input.addEventListener('change', function(){
+        input.checked = !input.checked
+        if (input.checked) {
+            database.grantedtaglist.add(input.getAttribute('tag'))
+        } else {
+            database.grantedtaglist.delete(input.getAttribute('tag'))
+        }
+    })
+
+    containerDiv.addEventListener("click",function(){
+        input.checked = !input.checked
+    })
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////FILTER
+//////////////////////////////////////////////////////////////////////////////
+
+export function createfilter(list) {
     const header = document.querySelector("header")
 
     //add tags
     list.forEach( tag => {
-        const containerDiv = document.createElement('div');
-        containerDiv.classList.add('filter-tag', 'boite');
-
-        // Create the input element
-        const input = document.createElement('input');
-        input.setAttribute('type', 'checkbox');
-        input.setAttribute('tag', tag);
-
-        // Create the span element
-        const span = document.createElement('span');
-        span.textContent = tag;
-
-        // Append input and span to the container div
-        containerDiv.appendChild(input);
-        containerDiv.appendChild(span);
-        header.appendChild(containerDiv)
-        input.addEventListener('change', function(){
-            input.checked = !input.checked
-            if (input.checked) {
-                grantedtaglist.add(input.getAttribute('tag'))
-            } else {
-                grantedtaglist.delete(input.getAttribute('tag'))
-            }
-        })
-
-        containerDiv.addEventListener("click",function(){
-            input.checked = !input.checked
-        })
+        createFilterElement(tag,header)
     })
     
     //add button
@@ -79,9 +108,9 @@ function createfilter(list) {
     header.appendChild(button)
 }
 
-function updatefilter(grantTags) { //only select the proper elements
-    console.log(grantedtaglist)
-    const filteredDB = db.filter(element => {
+export function updatefilter(grantTags) { //only select the proper elements
+    console.log(database.grantedtaglist)
+    const filteredDB = database.db.filter(element => {
         // Check if at least one tag in the element's 'tags' array exists in 'grantTags'
         return element.tags.some(t => grantTags.has(t));
     });
@@ -89,11 +118,19 @@ function updatefilter(grantTags) { //only select the proper elements
     read(filteredDB)
 }
 
-function read(list) {
+//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////READER
+//////////////////////////////////////////////////////////////////////////////
+
+export function read(list) {
+
+    //clear all the elements
     const todelete = document.querySelectorAll("body>*:not(header,script,.after_that)")    
     todelete.forEach(it => {
         it.remove()
     })
+
+    //if the list is clear, display nothing
     if (list.length==0) {
         const box = document.createElement("div")
         box.classList.add("flex-container")
@@ -123,7 +160,7 @@ function read(list) {
         box.appendChild(b)
         
         document.body.appendChild(box)
-    } else {
+    } else { //else display the elements
         for (const catekey in Category) {
             const catename = Category[catekey]
     
@@ -160,7 +197,7 @@ function read(list) {
             });
             
     
-            if (lst.length>0) {
+            if (lst.length>0) { //if there there elements from the filter
                 lst.forEach( site => {
     
                     console.log(site.main_name)
@@ -170,7 +207,6 @@ function read(list) {
                     link.classList.add("flex-item")
                     link.classList.add("boite")
                     link.setAttribute("id",site.id)
-                    link.setAttribute("image_preview",site.image_preview_link)
     
                     if (site.tags.includes("WIP")) { //if there is the tag wip add the so-called class
                         link.classList.add("wip")
@@ -215,13 +251,12 @@ function read(list) {
     }
 }
 
-function css(element,style) {
-    for (const property in style) {
-        element.style[property] = style[property]
-    }
-}
 
-function createcollapsingeffect() {
+//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////SECTION
+//////////////////////////////////////////////////////////////////////////////
+
+export function createcollapsingeffect() {
     const toggleButtons = document.querySelectorAll('section>h1');
 
     console.log("clicked")
@@ -245,15 +280,9 @@ function createcollapsingeffect() {
     });
 }
 
-var grantedtaglist = new Set()
-console.log(idlist)
-
-createfilter(taglist)
-
-read(db)
-createcollapsingeffect()
-
-document.querySelector("header>button").addEventListener('click',function() {
-    updatefilter(grantedtaglist)
-    createcollapsingeffect()
+//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////SELECT ALL
+//////////////////////////////////////////////////////////////////////////////
+document.getElementById("select_all").addEventListener('click',function() {
+    database.selectall()
 })

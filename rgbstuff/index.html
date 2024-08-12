@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="../css/index.css">
     <!-- font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,13 +16,13 @@
     <header>
         <div class="boite">Thème : </div>
         <i id="icon" class="boite fa-solid fa-moon themebutton" aria-hidden="true"></i> 
-        <div class="boite">Filtre des tags : </div>
+        <div class="boite" id="select_all">Filtre des tags : </div>
     </header>
     <div class="after_that"></div>
 </body>
 
-<!-- manage content (filter + database + collapsing category) -->
-<script type="module" src="js/database_reader.js"></script>
+<!-- manage content -->
+<script type="module" src="./js/init.js"></script>
 
 <!-- theme -->
 <script type="module" src="../js/theme_manager.js"></script>
