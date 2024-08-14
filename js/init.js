@@ -10,7 +10,7 @@ dbh.Website.addSite("oldport","Ancien Portfolio","https://nilsmt.github.io/Portf
 
 dbh.Website.addSite("port","Portfolio","https://nilsmt.github.io/Portfolio/",dbh.Category.Site,"Mon portfolio",["HTML","JS","CSS"])
 
-dbh.Website.addSite("justflickit","Just Flick It !","html/flick.html",dbh.Category.Game,"Un jeu que je développe",["Unity","C#","WIP"])
+dbh.Website.addSite("justflickit","Just Flick It !","https://github.com/NilsMT/Just-Flick-Itl",dbh.Category.Game,"Un jeu que je développe",["Unity","C#","WIP"])
 
 dbh.Website.addSite("pastek","Pastek","https://scratch.mit.edu/projects/825278397/",dbh.Category.Game,"Un jeu fait au collège",["Scratch"])
 
