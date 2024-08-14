@@ -4,9 +4,9 @@ let database = new dbh.Database()
 
 dbh.setDB(database)
 
-dbh.Website.addSite("gray","RGB to Grayscale","html/rgb_grayscale_color.html",dbh.Category.Site,"Transforme une couleur RGB en une couleur en niveaux de gris",["Échelle de gris"])
+dbh.Website.addSite("gray","RGB vers échelle de gris","html/rgb_grayscale_color.html",dbh.Category.Site,"Transforme une couleur RGB en une couleur en niveaux de gris",["Échelle de gris"])
 
-dbh.Website.addSite("comp","RGB to Complementary","html/rgb_complementary_color.html",dbh.Category.Site,"Transforme une couleur RGB en sa couleur complémentaire",["Complémentaire"])
+dbh.Website.addSite("comp","RGB vers couleur complémentaire","html/rgb_complementary_color.html",dbh.Category.Site,"Transforme une couleur RGB en sa couleur complémentaire",["Complémentaire"])
 
 
 dbh.createfilter(database.taglist)

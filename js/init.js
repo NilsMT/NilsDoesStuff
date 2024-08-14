@@ -20,6 +20,8 @@ dbh.Website.addSite("arch","A.R.C.H","https://www.roblox.com/games/8871746612/",
 
 dbh.Website.addSite("zrc","Z.R.C","https://www.roblox.com/games/7096759234/Zenium-Research-Center/",dbh.Category.Game,"Mon 1er jeu fait sur Roblox",["Lua","Roblox"])
 
+dbh.Website.addSite("aipr","A.I.P.R","https://www.roblox.com/games/18744063505/Arch-Industries-Potato-Reactor",dbh.Category.Game,"Mon 3ème jeu fait sur Roblox",["Lua","Roblox"])
+
 dbh.Website.addSite("animelist","Anime-List","https://anime-list-arcan.softr.app/",dbh.Category.Site,"Une liste d'anime faite sur Softr (non mise à jour)",["No-code"])
 
 dbh.Website.addSite("github","NilsMT","https://github.com/NilsMT",dbh.Category.Social,"Mon profil GitHub",["Code"])

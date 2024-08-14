@@ -11,7 +11,7 @@
     <script src="https://kit.fontawesome.com/a0107e3e1b.js" crossorigin="anonymous"></script>
     <link rel="icon" type="image/x-icon" href="../assets/grayscale_icon.png">
     <!--titre-->
-    <title>RGB to Grayscale</title>
+    <title>RGB vers échelle de gris</title>
 </head>
 <body>
     <!--
@@ -27,12 +27,12 @@
     </header>
     <div class="boite flex-container">
         <div class="boite flex-item">
-            <h1 class="boite">Grayscale to Color Converter</h1>
+            <h1 class="boite">Convertisseur RGB vers échelle de gris</h1>
             <div class="color_input_output">
                 <div id="input" class>
                     
                     <div class="color_box">
-                        <div class="txt">Color</div>
+                        <div class="txt">Couleur</div>
                         <input type="color" id="color_colorPicker" value="#ffffff">
                         <div class="values" id="color_colorValues">
                             <p id="input_hexValue">Hex: #ffffff</p>
@@ -43,7 +43,7 @@
                 <img src="../assets/eq.png" id="eq"></img>
                 <div id="output">
                     <div class="color_box">
-                        <div class="txt">Grayscale</div>
+                        <div class="txt">Échelle de gris</div>
                         <div id="output_scaleBox"></div>
                         <div class="values">
                             <p id="output_hexValue">Hex: #ffffff</p>
@@ -54,25 +54,25 @@
             </div>
         </div>
         <div class="boite flex-item" id="howcont">
-            <h1 class="boite">What's a grayscaled color ?</h1> 
+            <h1 class="boite">C'est quoi une échelle de gris ?</h1> 
             <p>
-                Its the color that is the same in grayscale. <br>
-                It allow you to know how your color will look if the saturation is set to 0, <br>
-                when you print something only in black and white for example.
+                C'est une couleur qui ne possède pas de teinte <br>
+                Cela permet d'avoir un aperçu d'une couleur quand la saturation est à 0 <br>
+                quand on imprime en noir et blanc par exemple.
             </p>
-            <h1 class="boite">How it's calculated ?</h1> 
+            <h1 class="boite">Comment est-elle calculée ?</h1> 
             <p>
-                Our eyes are most sensitive to green, then red and blue. <br>
-                So, we obtain ratios according to that sensitivity (0.3 for red, 0.59 for green and 0.11 for blue). <br>
-                Then we take the <r>R</r>,<g>G</g> and <b>B</b> of our color and make this calculation :
+                Nos yeux sont les plus sensibles envers le vert puis le rouge et enfin le bleu. <br>
+                Donc on obtient des ratios en cohérences avec cette sensitivité (0.3 pour le rouge, 0.59 pour le vert et 0.11 pour le bleu). <br>
+                Ensuite on prend le <r>R</r>,<g>G</g> et <b>B</b> de notre couleur et on effectue ce calcul :
             </p>
             <p>
                 0.3 x <r>R</r> + 0.59 x <g>G</g> + 0.11 x <b>B</b>
             </p>
             <p>
-                This allows us to get a number, that will be the same for R,G and B of our grayscaled color !
+                Cela permet d'obtenir un nombre qui sera la même valeur pour le R, G et B de notre échelle de gris !
             </p>
-            <h1 class="boite">Example</h1>
+            <h1 class="boite">Exemple</h1>
             <ul>
                 <li id="ex">0.3 x <r id="r">255</r> + 0.59 x <g id="g">255</g> + 0.11 x <b id="b">255</b> ≃ <span class="res restot">255</span></li>
                 <li id="fin">RGB : <r class="res resr">255</r>, <g class="res resg">255</g>, <b class="res resb">255</b></li>
