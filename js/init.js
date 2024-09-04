@@ -6,9 +6,9 @@ dbh.setDB(database)
 
 dbh.Website.addSite("rgb","RGB Stuffs","rgbstuff/",dbh.Category.Site,"Un site pour bidouiller des couleurs RGB",["HTML","JS","CSS","WIP"])
 
-dbh.Website.addSite("portv1","Portfolio V1","https://nilsmt.github.io/Portfolio/deprecated",dbh.Category.Site,"La 1ère version de mon portfolio",["HTML","JS","CSS"])
+dbh.Website.addSite("portv1","Portfolio V1","https://nilsmt.github.io/PortfolioOld/deprecated",dbh.Category.Site,"La 1ère version de mon portfolio",["HTML","JS","CSS"])
 
-dbh.Website.addSite("portv2","Portfolio V2","https://nilsmt.github.io/Portfolio/",dbh.Category.Site,"La 2ème version de mon portfolio",["HTML","JS","CSS"])
+dbh.Website.addSite("portv2","Portfolio V2","https://nilsmt.github.io/PortfolioOld/",dbh.Category.Site,"La 2ème version de mon portfolio",["HTML","JS","CSS"])
 
 dbh.Website.addSite("portv3","Portfolio V3","https://nilsmt-portfolio.vercel.app/",dbh.Category.Site,"La 3ème version de mon portfolio",["HTML","JS","CSS","Vue.js","WIP"])
 
