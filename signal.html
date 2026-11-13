@@ -1,0 +1,1614 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Traitement du signal – comprendre en voyant</title>
+        <style>
+            button {
+                color: #dbeafe;
+            }
+
+            button:hover {
+                background: #2563eb;
+                color: #ffffff;
+            }
+            nav {
+                background: #0f172a;
+                border-bottom: 1px solid #334155;
+            }
+
+            nav a {
+                color: #60a5fa;
+            }
+
+            nav a:hover {
+                color: #93c5fd;
+            }
+            css input,
+            select {
+                color: #e2e8f0;
+                background: #1e293b;
+                border: 1px solid #475569;
+            }
+
+            input[type="range"] {
+                accent-color: #60a5fa;
+            }
+
+            input[type="checkbox"] {
+                accent-color: #60a5fa;
+            }
+
+            select option {
+                background: #1e293b;
+                color: #e2e8f0;
+            }
+            body {
+                font:
+                    16px/1.5 system-ui,
+                    sans-serif;
+                max-width: 920px;
+                margin: 0 auto;
+                padding: 16px;
+                background: #0f172a;
+                color: #e2e8f0;
+            }
+            h1 {
+                margin-bottom: 4px;
+            }
+            section {
+                background: #1e293b;
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin: 20px 0;
+                box-shadow: 0 1px 4px #0002;
+            }
+            h2 {
+                margin: 0 0 6px;
+                color: #60a5fa;
+                font-size: 20px;
+            }
+            .intro {
+                margin: 4px 0 10px;
+            }
+            .ctrls {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 18px;
+                margin: 8px 0;
+            }
+            .ctrls label {
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .ctrls input[type="range"] {
+                width: 150px;
+            }
+            canvas {
+                width: 100%;
+                display: block;
+                background: #111c30;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                margin: 6px 0;
+            }
+            .info {
+                font:
+                    13px/1.45 ui-monospace,
+                    monospace;
+                background: #172554;
+                border-radius: 8px;
+                padding: 8px 10px;
+                margin: 6px 0;
+            }
+            .note {
+                background: #052e2b;
+                border-left: 4px solid #34d399;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 15px;
+            }
+            .big {
+                background: #422006;
+                border-left: 4px solid #fbbf24;
+                padding: 8px 14px;
+                border-radius: 6px;
+            }
+            button {
+                padding: 4px 10px;
+                border-radius: 6px;
+                border: 1px solid #3b82f6;
+                background: #1e3a5f;
+                cursor: pointer;
+            }
+            nav {
+                position: sticky;
+                top: 0;
+                background: #0f172a;
+                padding: 6px 0;
+                z-index: 5;
+            }
+            nav a {
+                margin-right: 10px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Traitement du signal — comprendre en voyant</h1>
+        <p>
+            Bouge les curseurs, regarde ce qui change, lis la case verte. Les
+            labos suivent les chapitres des slides (Partie I).
+        </p>
+        <div class="big">
+            <b>L'histoire du cours en 6 phrases</b><br />
+            1. Un <b>signal</b> = une courbe qui dépend du temps.<br />
+            2. Les <b>sinusoïdes</b> sont les « notes pures » : les briques de
+            base.<br />
+            3. <b>Fourier</b> = trouver la « recette » : combien de chaque note
+            pure il y a dans le signal (on mesure la ressemblance en multipliant
+            puis en faisant la moyenne).<br />
+            4. Signal périodique → recette discrète (<b>série de Fourier</b>).
+            Signal quelconque → recette continue (<b>transformée de Fourier</b
+            >).<br />
+            5. <b>Convolution</b> = moyenne glissante pondérée. Côté fréquences,
+            elle devient une simple <b>multiplication</b>.<br />
+            6. Donc <b>filtrer</b> = multiplier la recette par un gain (garder
+            certaines fréquences, couper les autres). Le <b>Dirac</b> est
+            l'outil qui permet de parler du spectre d'une sinusoïde pure.
+        </div>
+        <nav id="nav"></nav>
+        <div id="app"></div>
+
+        <script>
+            /* ============ outils ============ */
+            const $ = (t, a = {}, h = "") => {
+                const e = document.createElement(t);
+                Object.assign(e, a);
+                if (h !== "") e.innerHTML = h;
+                return e;
+            };
+            const TAU = 2 * Math.PI,
+                sinc = (x) => (x === 0 ? 1 : Math.sin(x) / x);
+            function rng(s) {
+                return () => {
+                    s = (s * 16807) % 2147483647;
+                    return (s - 1) / 2147483646;
+                };
+            }
+            function gauss(r) {
+                return (r() + r() + r() + r() + r() + r() - 3) * Math.SQRT2;
+            }
+            let AC;
+            function play(freqs, amps, dur = 1.6) {
+                AC =
+                    AC ||
+                    new (window.AudioContext || window.webkitAudioContext)();
+                const g = AC.createGain(),
+                    t0 = AC.currentTime;
+                g.gain.setValueAtTime(0, t0);
+                g.gain.linearRampToValueAtTime(0.3, t0 + 0.03);
+                g.gain.linearRampToValueAtTime(0, t0 + dur);
+                g.connect(AC.destination);
+                const tot = amps.reduce((a, b) => a + b, 0) || 1;
+                freqs.forEach((f, i) => {
+                    const o = AC.createOscillator(),
+                        og = AC.createGain();
+                    og.gain.value = amps[i] / tot;
+                    o.frequency.value = f;
+                    o.connect(og);
+                    og.connect(g);
+                    o.start();
+                    o.stop(t0 + dur);
+                });
+            }
+            function setup(c) {
+                const r = window.devicePixelRatio || 1,
+                    w = c.clientWidth,
+                    h = c.clientHeight;
+                if (
+                    c.width !== Math.round(w * r) ||
+                    c.height !== Math.round(h * r)
+                ) {
+                    c.width = w * r;
+                    c.height = h * r;
+                }
+                const g = c.getContext("2d");
+                g.setTransform(r, 0, 0, r, 0, 0);
+                g.clearRect(0, 0, w, h);
+                return { g, w, h };
+            }
+            /* series: {f}|{pts}|{bars}|{dot}|{vline}|{text,at} ; options color, lw, dash, area, n */
+            function plot(c, [x0, x1, y0, y1], series) {
+                const { g, w, h } = setup(c),
+                    X = (x) => ((x - x0) / (x1 - x0)) * w,
+                    Y = (y) => h - ((y - y0) / (y1 - y0)) * h;
+                g.strokeStyle = "#475569";
+                g.lineWidth = 1;
+                g.setLineDash([]);
+                g.beginPath();
+                g.moveTo(0, Y(0));
+                g.lineTo(w, Y(0));
+                if (x0 < 0 && x1 > 0) {
+                    g.moveTo(X(0), 0);
+                    g.lineTo(X(0), h);
+                }
+                g.stroke();
+                g.font = "11px sans-serif";
+                g.fillStyle = "#94a3b8";
+                g.textAlign = "left";
+                g.fillText(+x0.toFixed(2), 3, h - 4);
+                g.textAlign = "right";
+                g.fillText(+x1.toFixed(2), w - 3, h - 4);
+                for (const s of series) {
+                    g.strokeStyle = g.fillStyle = s.color || "#2563eb";
+                    g.lineWidth = s.lw || 2;
+                    g.setLineDash(s.dash || []);
+                    if (s.vline !== undefined) {
+                        g.beginPath();
+                        g.moveTo(X(s.vline), 0);
+                        g.lineTo(X(s.vline), h);
+                        g.stroke();
+                    } else if (s.text !== undefined) {
+                        g.textAlign = "center";
+                        g.font = "12px sans-serif";
+                        g.fillText(s.text, X(s.at[0]), Y(s.at[1]));
+                    } else if (s.dot) {
+                        g.beginPath();
+                        g.arc(X(s.dot[0]), Y(s.dot[1]), s.r || 5, 0, 7);
+                        g.fill();
+                    } else if (s.bars) {
+                        s.bars.forEach(([x, y]) => {
+                            g.beginPath();
+                            g.moveTo(X(x), Y(0));
+                            g.lineTo(X(x), Y(y));
+                            g.stroke();
+                            g.beginPath();
+                            g.arc(X(x), Y(y), s.r || 3.5, 0, 7);
+                            g.fill();
+                        });
+                    } else {
+                        const n = s.n || 500,
+                            P =
+                                s.pts ||
+                                Array.from({ length: n + 1 }, (_, i) => {
+                                    const x = x0 + ((x1 - x0) * i) / n;
+                                    return [x, s.f(x)];
+                                });
+                        g.beginPath();
+                        P.forEach(([x, y], i) =>
+                            i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)),
+                        );
+                        if (s.area) {
+                            g.lineTo(X(P[P.length - 1][0]), Y(0));
+                            g.lineTo(X(P[0][0]), Y(0));
+                            g.closePath();
+                            g.globalAlpha = 0.25;
+                            g.fill();
+                            g.globalAlpha = 1;
+                        } else g.stroke();
+                    }
+                }
+                g.setLineDash([]);
+                return { g, w, h, X, Y };
+            }
+            /* ============ constructeur de sections ============ */
+            const sections = [];
+            function section(S) {
+                const sec = $("section", { id: S.id });
+                sec.append(
+                    $("h2", {}, S.title),
+                    $("p", { className: "intro" }, S.intro),
+                );
+                const V = { time: 0 },
+                    bar = $("div", { className: "ctrls" });
+                const cvs = S.canvases.map((h) => {
+                    const c = $("canvas");
+                    c.style.height = h + "px";
+                    return c;
+                });
+                const info = $("div", { className: "info" });
+                const run = () => S.update(V, cvs, info);
+                for (const c of S.controls || []) {
+                    const w = $("label");
+                    if (c.type === "select") {
+                        const s = $("select");
+                        c.opts.forEach(([v, l]) =>
+                            s.append($("option", { value: v }, l)),
+                        );
+                        V[c.id] = s.value = c.val ?? c.opts[0][0];
+                        s.oninput = () => {
+                            V[c.id] = s.value;
+                            run();
+                        };
+                        w.append(c.label + " ", s);
+                    } else if (c.type === "button") {
+                        const b = $("button", {}, c.label);
+                        b.onclick = () => c.fn(V);
+                        w.append(b);
+                    } else if (c.type === "check") {
+                        const k = $("input", { type: "checkbox" });
+                        V[c.id] = false;
+                        k.onchange = () => {
+                            V[c.id] = k.checked;
+                            run();
+                        };
+                        w.append(k, c.label);
+                    } else {
+                        const r = $("input", {
+                                type: "range",
+                                min: c.min,
+                                max: c.max,
+                                step: c.step,
+                                value: c.val,
+                            }),
+                            v = $("span", {}, c.val);
+                        V[c.id] = +c.val;
+                        r.oninput = () => {
+                            V[c.id] = +r.value;
+                            v.textContent = r.value;
+                            run();
+                        };
+                        w.append(c.label + " ", r, v);
+                    }
+                    bar.append(w);
+                }
+                sec.append(bar, ...cvs, info);
+                if (S.note)
+                    sec.append(
+                        $(
+                            "div",
+                            { className: "note" },
+                            "<b>À retenir :</b> " + S.note,
+                        ),
+                    );
+                document.getElementById("app").append(sec);
+                document
+                    .getElementById("nav")
+                    .append($("a", { href: "#" + S.id }, S.nav));
+                const o = { run, V, vis: true, anim: S.anim, animIf: S.animIf };
+                sections.push(o);
+                new IntersectionObserver((e) => {
+                    o.vis = e[0].isIntersecting;
+                    if (o.vis) run();
+                }).observe(sec);
+                setTimeout(run, 0);
+            }
+            (function loop(t) {
+                for (const o of sections)
+                    if (o.anim && o.vis && (!o.animIf || o.animIf(o.V))) {
+                        o.V.time = t / 1000;
+                        o.run();
+                    }
+                requestAnimationFrame(loop);
+            })(0);
+            addEventListener("resize", () =>
+                sections.forEach((o) => o.vis && o.run()),
+            );
+
+            /* ============ Ch.0a nombres complexes ============ */
+            section({
+                id: "cplx",
+                nav: "0a Complexes",
+                title: "Ch.0 · Nombres complexes : un point qui tourne",
+                intro: "Un nombre complexe = un point du plan (x, y). L’exponentielle complexe e^{iθ} est le point qui tourne sur le cercle de rayon 1. Son ombre horizontale est cos θ (partie réelle), son ombre verticale est sin θ (partie imaginaire). C’est pour ça qu’on l’utilise : <b>un seul objet contient cos ET sin</b>.",
+                controls: [
+                    {
+                        id: "f",
+                        label: "fréquence f (tours par seconde)",
+                        min: 0.1,
+                        max: 2,
+                        step: 0.05,
+                        val: 0.5,
+                    },
+                ],
+                canvases: [250],
+                anim: true,
+                update: (V, [c], info) => {
+                    const { g, w, h } = setup(c),
+                        f = V.f,
+                        t = V.time,
+                        th = TAU * f * t,
+                        R = 95,
+                        cx = 120,
+                        cy = h / 2;
+                    g.strokeStyle = "#475569";
+                    g.lineWidth = 1;
+                    g.beginPath();
+                    g.arc(cx, cy, R, 0, TAU);
+                    g.stroke();
+                    g.beginPath();
+                    g.moveTo(cx - R - 15, cy);
+                    g.lineTo(cx + R + 15, cy);
+                    g.moveTo(cx, cy - R - 15);
+                    g.lineTo(cx, cy + R + 15);
+                    g.stroke();
+                    const px = cx + R * Math.cos(th),
+                        py = cy - R * Math.sin(th);
+                    g.strokeStyle = "#94a3b8";
+                    g.lineWidth = 2;
+                    g.beginPath();
+                    g.moveTo(cx, cy);
+                    g.lineTo(px, py);
+                    g.stroke();
+                    g.setLineDash([4, 4]);
+                    g.strokeStyle = "#2563eb";
+                    g.beginPath();
+                    g.moveTo(px, py);
+                    g.lineTo(px, cy);
+                    g.stroke();
+                    const x0 = 270,
+                        W = w - x0 - 10,
+                        span = 4,
+                        T = (u) => x0 + (W * (u - (t - span))) / span;
+                    g.strokeStyle = "#dc2626";
+                    g.beginPath();
+                    g.moveTo(px, py);
+                    g.lineTo(T(t), py);
+                    g.stroke();
+                    g.setLineDash([]);
+                    g.fillStyle = "#94a3b8";
+                    g.beginPath();
+                    g.arc(px, py, 5, 0, TAU);
+                    g.fill();
+                    g.strokeStyle = "#475569";
+                    g.beginPath();
+                    g.moveTo(x0, cy);
+                    g.lineTo(x0 + W, cy);
+                    g.stroke();
+                    [
+                        ["#2563eb", (u) => Math.cos(TAU * f * u)],
+                        ["#dc2626", (u) => Math.sin(TAU * f * u)],
+                    ].forEach(([col, fn]) => {
+                        g.strokeStyle = col;
+                        g.lineWidth = 2;
+                        g.beginPath();
+                        for (let i = 0; i <= 300; i++) {
+                            const u = t - span + (span * i) / 300,
+                                x = T(u),
+                                y = cy - R * fn(u);
+                            i ? g.lineTo(x, y) : g.moveTo(x, y);
+                        }
+                        g.stroke();
+                    });
+                    g.fillStyle = "#2563eb";
+                    g.font = "12px sans-serif";
+                    g.textAlign = "left";
+                    g.fillText("bleu = partie réelle cos(2πft)", x0, 16);
+                    g.fillStyle = "#dc2626";
+                    g.fillText("rouge = partie imaginaire sin(2πft)", x0, 32);
+                    info.textContent = `e^{iθ} = cos θ + i·sin θ = ${Math.cos(th).toFixed(2)} + i·${Math.sin(th).toFixed(2)}   |   module = 1   |   période = ${(1 / f).toFixed(2)} s`;
+                },
+                note: "e^{iθ} = cos θ + i sin θ. Le module vaut toujours 1 (le point reste sur le cercle). Plus f est grand, plus ça tourne vite, donc plus la fréquence est haute. Les formules cos = (e^{iθ}+e^{−iθ})/2 et sin = (e^{iθ}−e^{−iθ})/2i viennent de là.",
+            });
+
+            /* ============ Ch.0b base orthonormée ============ */
+            section({
+                id: "vec",
+                nav: "0b Base",
+                title: "Ch.0 · Produit scalaire, base orthonormée, norme",
+                intro: "Dans le plan, une flèche v a deux « coordonnées » dans une base. Si la base est <b>orthonormée</b> (axes perpendiculaires, de longueur 1), on lit la coordonnée avec un produit scalaire = la projection de v sur l’axe. <b>Un signal fera exactement la même chose</b>, avec une infinité d’axes.",
+                controls: [
+                    {
+                        id: "vx",
+                        label: "v : x",
+                        min: -3,
+                        max: 3,
+                        step: 0.1,
+                        val: 2,
+                    },
+                    {
+                        id: "vy",
+                        label: "y",
+                        min: -3,
+                        max: 3,
+                        step: 0.1,
+                        val: 1.5,
+                    },
+                    {
+                        id: "al",
+                        label: "rotation de la base (°)",
+                        min: 0,
+                        max: 180,
+                        step: 1,
+                        val: 30,
+                    },
+                ],
+                canvases: [300],
+                update: (V, [c], info) => {
+                    const a = (V.al * Math.PI) / 180,
+                        e1 = [Math.cos(a), Math.sin(a)],
+                        e2 = [-Math.sin(a), Math.cos(a)],
+                        v = [V.vx, V.vy];
+                    const d = (p, q) => p[0] * q[0] + p[1] * q[1],
+                        c1 = d(v, e1),
+                        c2 = d(v, e2),
+                        r = c.clientWidth / c.clientHeight,
+                        m = (k, e) => [k * e[0], k * e[1]];
+                    plot(
+                        c,
+                        [-3.4 * r, 3.4 * r, -3.4, 3.4],
+                        [
+                            {
+                                pts: [m(-6, e1), m(6, e1)],
+                                color: "#bfdbfe",
+                                lw: 1,
+                            },
+                            {
+                                pts: [m(-6, e2), m(6, e2)],
+                                color: "#fecaca",
+                                lw: 1,
+                            },
+                            {
+                                pts: [v, m(c1, e1)],
+                                color: "#2563eb",
+                                dash: [4, 4],
+                                lw: 1.5,
+                            },
+                            {
+                                pts: [v, m(c2, e2)],
+                                color: "#dc2626",
+                                dash: [4, 4],
+                                lw: 1.5,
+                            },
+                            { pts: [[0, 0], e1], color: "#2563eb", lw: 4 },
+                            { pts: [[0, 0], e2], color: "#dc2626", lw: 4 },
+                            { pts: [[0, 0], v], color: "#94a3b8", lw: 3 },
+                            { dot: v, color: "#94a3b8" },
+                        ],
+                    );
+                    info.innerHTML = `coordonnée sur e1 (bleu) : ⟨v,e1⟩ = ${c1.toFixed(2)}<br>coordonnée sur e2 (rouge) : ⟨v,e2⟩ = ${c2.toFixed(2)}<br>‖v‖² = ${d(v, v).toFixed(2)} = ${c1.toFixed(2)}² + ${c2.toFixed(2)}² = ${(c1 * c1 + c2 * c2).toFixed(2)}  ← Pythagore (= Parseval plus tard !)`;
+                },
+                note: "Dans une base orthonormée, v = ⟨v,e1⟩e1 + ⟨v,e2⟩e2. Tourne la base : les coordonnées changent mais la longueur (la norme) ne change pas. C’est le principe de tout le cours : « lire les coordonnées d’un signal sur une base de sinusoïdes ».",
+            });
+
+            /* ============ Ch.1 sinusoïdes, retard, échelle ============ */
+            section({
+                id: "sin",
+                nav: "1 Sinusoïdes",
+                title: "Ch.1 · Sinusoïdes, retard et changement d’échelle",
+                intro: "Gris = signal d’origine s(t)=A·sin(2πft+φ). Orange = <b>retardé</b> s(t−t₀) (on le décale). Bleu = <b>changement d’échelle</b> s(a·t) (on le comprime ou on l’étire). Teste avec le son : a &lt; 1 ralentit le signal.",
+                controls: [
+                    {
+                        id: "A",
+                        label: "amplitude A",
+                        min: 0.5,
+                        max: 3,
+                        step: 0.1,
+                        val: 1.5,
+                    },
+                    {
+                        id: "f",
+                        label: "fréquence f (Hz)",
+                        min: 1,
+                        max: 6,
+                        step: 0.5,
+                        val: 2,
+                    },
+                    {
+                        id: "ph",
+                        label: "phase φ",
+                        min: 0,
+                        max: 6.28,
+                        step: 0.1,
+                        val: 0,
+                    },
+                    {
+                        id: "t0",
+                        label: "retard t₀",
+                        min: 0,
+                        max: 1,
+                        step: 0.05,
+                        val: 0.25,
+                    },
+                    {
+                        id: "a",
+                        label: "échelle a",
+                        min: 0.25,
+                        max: 3,
+                        step: 0.05,
+                        val: 0.5,
+                    },
+                    {
+                        type: "button",
+                        label: "▶ son original",
+                        fn: (V) => play([110 * V.f], [1]),
+                    },
+                    {
+                        type: "button",
+                        label: "▶ son s(a·t)",
+                        fn: (V) => play([110 * V.f * V.a], [1]),
+                    },
+                ],
+                canvases: [230],
+                update: (V, [c], info) => {
+                    const s = (t) => V.A * Math.sin(TAU * V.f * t + V.ph);
+                    plot(
+                        c,
+                        [0, 2, -3.3, 3.3],
+                        [
+                            { f: s, color: "#9ca3af", n: 900 },
+                            {
+                                f: (t) => s(t - V.t0),
+                                color: "#f97316",
+                                n: 900,
+                                lw: 1.5,
+                            },
+                            { f: (t) => s(V.a * t), color: "#2563eb", n: 900 },
+                        ],
+                    );
+                    info.innerHTML = `original : fréquence ${V.f} Hz, période ${(1 / V.f).toFixed(3)} s<br>retardé (orange) : même fréquence, juste décalé<br>s(a·t) (bleu) : fréquence ${(V.a * V.f).toFixed(2)} Hz  → ${V.a < 1 ? "plus grave" : V.a > 1 ? "plus aigu" : "identique"}`;
+                },
+                note: "Retard ≠ changement de fréquence. Changement d’échelle s(a·t) multiplie la fréquence par a : ralentir une bande son (a&lt;1) la rend plus grave.",
+            });
+
+            /* ============ Ch.2a coefficients ============ */
+            const SIG2 = {
+                melange: (t) =>
+                    Math.sin(TAU * t) +
+                    0.5 * Math.sin(TAU * 3 * t) +
+                    0.3 * Math.cos(TAU * 2 * t),
+                carre: (t) => (t % 1 < 0.5 ? 1 : -1),
+                scie: (t) => 2 * (t % 1) - 1,
+            };
+            section({
+                id: "coef",
+                nav: "2a Coefficients",
+                title: "Ch.2 · Comment on mesure « combien de fréquence n » dans un signal",
+                intro: "Recette : on <b>multiplie</b> le signal par une sinusoïde de fréquence n, puis on prend la <b>moyenne</b>. Si le signal « ressemble » à cette sinusoïde, le produit est surtout positif et la moyenne est grande. Sinon, les + et − s’annulent. Cette moyenne est exactement le coefficient de Fourier c<sub>n</sub> = (1/T)∫ s(t) e^{−2iπnt/T} dt (ici T=1).",
+                controls: [
+                    {
+                        id: "sig",
+                        type: "select",
+                        label: "signal",
+                        opts: [
+                            ["melange", "mélange de sinus"],
+                            ["carre", "créneau"],
+                            ["scie", "dent de scie"],
+                        ],
+                    },
+                    {
+                        id: "n",
+                        label: "fréquence testée n",
+                        min: 0,
+                        max: 10,
+                        step: 1,
+                        val: 1,
+                    },
+                    {
+                        id: "base",
+                        type: "select",
+                        label: "tester avec",
+                        opts: [
+                            ["cos", "cosinus"],
+                            ["sin", "sinus"],
+                        ],
+                        val: "sin",
+                    },
+                ],
+                canvases: [170, 170, 150],
+                update: (V, [c1, c2, c3], info) => {
+                    const s = SIG2[V.sig],
+                        n = +V.n,
+                        M = 1000,
+                        cs = V.base === "cos";
+                    const base = cs
+                        ? (t) => Math.cos(TAU * n * t)
+                        : (t) => Math.sin(TAU * n * t);
+                    const mean = (g) => {
+                        let a = 0;
+                        for (let i = 0; i < M; i++) a += g((i + 0.5) / M);
+                        return a / M;
+                    };
+                    const mc = mean((t) => s(t) * Math.cos(TAU * n * t)),
+                        ms = mean((t) => s(t) * Math.sin(TAU * n * t)),
+                        m = cs ? mc : ms;
+                    plot(
+                        c1,
+                        [0, 1, -2.2, 2.2],
+                        [
+                            { f: s, color: "#94a3b8", n: 800 },
+                            { f: base, color: "#f97316", lw: 1.5, n: 800 },
+                        ],
+                    );
+                    plot(
+                        c2,
+                        [0, 1, -2.6, 2.6],
+                        [
+                            {
+                                f: (t) => s(t) * base(t),
+                                color: "#2563eb",
+                                area: true,
+                                n: 800,
+                            },
+                            { f: () => m, color: "#dc2626", dash: [6, 4] },
+                        ],
+                    );
+                    const bars = [],
+                        bg = [];
+                    let mx = 0.05;
+                    for (let k = 0; k <= 10; k++) {
+                        const a = mean((t) => s(t) * Math.cos(TAU * k * t)),
+                            b = mean((t) => s(t) * Math.sin(TAU * k * t)),
+                            v = Math.hypot(a, b);
+                        mx = Math.max(mx, v);
+                        (k === n ? bars : bg).push([k, v]);
+                    }
+                    plot(
+                        c3,
+                        [-0.5, 10.5, 0, mx * 1.2],
+                        [
+                            { bars: bg, color: "#cbd5e1" },
+                            { bars, color: "#2563eb", r: 6 },
+                        ],
+                    );
+                    info.innerHTML = `1er graphique : signal (noir) et sinusoïde de test (orange)<br>2e : produit signal×test (bleu) ; <span style="color:#dc2626">ligne rouge = sa moyenne = ${m.toFixed(3)}</span><br>3e : |c_k| pour k=0..10 (le point bleu est le n choisi)<br>c_n = ${mc.toFixed(3)} − i·${ms.toFixed(3)}  → |c_n| = ${Math.hypot(mc, ms).toFixed(3)}`;
+                },
+                note: "Essaie « mélange de sinus » : la moyenne est grande seulement pour n=1, 2 (cos) et 3, c’est-à-dire exactement les ingrédients du mélange. C’est la même chose que lire une coordonnée avec un produit scalaire (labo 0b). Le dessin du bas, c’est le spectre.",
+            });
+
+            /* ============ Ch.2b séries de Fourier ============ */
+            const SIG3 = {
+                carre: (t) => (t < 0 ? -1 : 1),
+                scie: (t) => 2 * t,
+                triangle: (t) => 1 - 4 * Math.abs(t),
+                porte: (t) => (Math.abs(t) < 0.1 ? 1 : 0),
+                lisse: (t) => Math.exp(Math.cos(TAU * t)),
+            };
+            const wrap = (t) => t - Math.floor(t + 0.5),
+                cache3 = {};
+            function coefs3(name) {
+                if (cache3[name]) return cache3[name];
+                const M = 2048,
+                    s = SIG3[name],
+                    K = 80,
+                    A = [],
+                    B = [];
+                let c0 = 0,
+                    en = 0;
+                for (let i = 0; i < M; i++) {
+                    const v = s((i + 0.5) / M - 0.5);
+                    c0 += v / M;
+                    en += (v * v) / M;
+                }
+                for (let k = 1; k <= K; k++) {
+                    let a = 0,
+                        b = 0;
+                    for (let i = 0; i < M; i++) {
+                        const t = (i + 0.5) / M - 0.5,
+                            v = s(t);
+                        a += v * Math.sin(TAU * k * t);
+                        b += v * Math.cos(TAU * k * t);
+                    }
+                    A[k] = (2 * a) / M;
+                    B[k] = (2 * b) / M;
+                }
+                return (cache3[name] = { c0, A, B, en });
+            }
+            section({
+                id: "sf",
+                nav: "2b Fourier",
+                title: "Ch.2 · Série de Fourier : reconstruire un signal avec N sinusoïdes (et Gibbs)",
+                intro: "Gris = le vrai signal périodique. Bleu = sa <b>série partielle SF<sub>N</sub></b> : on n’utilise que les fréquences jusqu’à N. Monte N et regarde la reconstruction. Compare un signal <b>discontinu</b> (créneau), <b>continu mais pointu</b> (triangle) et <b>très régulier</b> (lisse).",
+                controls: [
+                    {
+                        id: "sig",
+                        type: "select",
+                        label: "signal",
+                        opts: [
+                            ["carre", "créneau (discontinu)"],
+                            ["scie", "dent de scie (discontinue)"],
+                            ["triangle", "triangle (continu)"],
+                            ["porte", "porte étroite"],
+                            ["lisse", "lisse (exp(cos))"],
+                        ],
+                    },
+                    {
+                        id: "N",
+                        label: "N (nb de sinusoïdes)",
+                        min: 0,
+                        max: 60,
+                        step: 1,
+                        val: 3,
+                    },
+                ],
+                canvases: [260, 150],
+                update: (V, [c1, c2], info) => {
+                    const co = coefs3(V.sig),
+                        N = +V.N,
+                        s = (t) => SIG3[V.sig](wrap(t));
+                    const SF = (t) => {
+                        let v = co.c0;
+                        for (let k = 1; k <= N; k++)
+                            v +=
+                                co.B[k] * Math.cos(TAU * k * t) +
+                                co.A[k] * Math.sin(TAU * k * t);
+                        return v;
+                    };
+                    let lo = 1e9,
+                        hi = -1e9;
+                    for (let i = 0; i < 200; i++) {
+                        const v = s(i / 200 - 0.5);
+                        lo = Math.min(lo, v);
+                        hi = Math.max(hi, v);
+                    }
+                    const pad = (hi - lo) * 0.35 + 0.05;
+                    plot(
+                        c1,
+                        [-1, 1, lo - pad, hi + pad],
+                        [
+                            { f: s, color: "#9ca3af", n: 1200 },
+                            { f: SF, color: "#2563eb", n: 1200 },
+                        ],
+                    );
+                    let err = 0,
+                        mx = -1e9;
+                    for (let i = 0; i < 1000; i++) {
+                        const t = (i + 0.5) / 1000 - 0.5,
+                            d = SF(t);
+                        err += (s(t) - d) ** 2 / 1000;
+                        mx = Math.max(mx, d);
+                    }
+                    const bars = [],
+                        bg = [];
+                    let m2 = 0.001;
+                    for (let k = 1; k <= 30; k++) {
+                        const m = Math.hypot(co.A[k], co.B[k]) / 2;
+                        m2 = Math.max(m2, m);
+                        (k <= N ? bars : bg).push([k, m]);
+                    }
+                    plot(
+                        c2,
+                        [0, 31, 0, m2 * 1.2],
+                        [
+                            { bars: bg, color: "#cbd5e1" },
+                            { bars, color: "#2563eb" },
+                        ],
+                    );
+                    let cap = co.c0 * co.c0;
+                    for (let k = 1; k <= N; k++)
+                        cap += (co.A[k] ** 2 + co.B[k] ** 2) / 2;
+                    info.innerHTML = `erreur « énergie » ‖s−SF_N‖ = ${Math.sqrt(err).toFixed(4)}  (tend vers 0 pour tous ces signaux : convergence L²)<br>max de SF_N = ${mx.toFixed(3)}  vs max de s = ${hi.toFixed(3)}  ${(V.sig === "carre" || V.sig === "scie" || V.sig === "porte") && N > 3 ? "← dépassement = phénomène de Gibbs (~9 % du saut)" : ""}<br>énergie capturée (Parseval) : ${((100 * cap) / co.en).toFixed(2)} %<br>graphique du bas : amplitudes |c_k| (bleu = utilisées)`;
+                },
+                note: "(1) Plus de sinusoïdes → meilleure approximation (au sens de l’énergie). (2) Si le signal est continu, ça converge partout. S’il saute, un dépassement d’environ 9 % reste près du saut et ne disparaît jamais : c’est Gibbs (essaie le créneau avec N=60). (3) Plus le signal est régulier, plus les coefficients tombent vite vers 0 : « lisse » est quasi parfait avec N=3, ce qui permet de compresser. Rappel : les petits n sont les basses fréquences (forme globale), les grands n sont les hautes fréquences (détails et angles).",
+            });
+
+            /* ============ Ch.3a corde vibrante ============ */
+            const PRE = {
+                pure: [1, 0, 0, 0, 0, 0, 0, 0],
+                cello: [1, 0.7, 0.5, 0.4, 0.25, 0.15, 0.1, 0.05],
+                clar: [1, 0, 0.6, 0, 0.35, 0, 0.2, 0],
+                riche: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3],
+            };
+            section({
+                id: "corde",
+                nav: "3a Corde",
+                title: "Ch.3 · La corde vibrante : fréquence = hauteur, harmoniques = timbre",
+                intro: "Une corde vibre comme une somme de « modes » : le mode n a n fuseaux et la fréquence n·f₁ (f₁ = c/2L). <b>C’est une série de Fourier réelle !</b> Le mouvement est montré au ralenti. Change la longueur (hauteur de la note) puis la recette d’harmoniques (timbre).",
+                controls: [
+                    {
+                        id: "L",
+                        label: "longueur L",
+                        min: 0.5,
+                        max: 2,
+                        step: 0.05,
+                        val: 1,
+                    },
+                    {
+                        id: "pre",
+                        type: "select",
+                        label: "timbre",
+                        opts: [
+                            ["pure", "son pur (n=1 seul)"],
+                            ["cello", "violoncelle (riche)"],
+                            ["clar", "clarinette (harmoniques impairs)"],
+                            ["riche", "très brillant"],
+                        ],
+                        val: "cello",
+                    },
+                    {
+                        type: "button",
+                        label: "▶ écouter",
+                        fn: (V) => {
+                            const a = PRE[V.pre],
+                                f1 = 220 / V.L,
+                                fr = [],
+                                am = [];
+                            a.forEach((x, i) => {
+                                if (x > 0) {
+                                    fr.push((i + 1) * f1);
+                                    am.push(x);
+                                }
+                            });
+                            play(fr, am, 2);
+                        },
+                    },
+                ],
+                canvases: [190, 150, 150],
+                anim: true,
+                update: (V, [c1, c2, c3], info) => {
+                    const a = PRE[V.pre],
+                        L = V.L,
+                        f1 = 220 / L,
+                        t = V.time,
+                        tot = Math.max(
+                            1,
+                            a.reduce((x, y) => x + y, 0),
+                        ),
+                        sc = (1.7 / tot) * 1.2;
+                    const mode = (n) => (x) =>
+                        a[n - 1] *
+                        Math.sin((n * Math.PI * x) / L) *
+                        Math.cos(TAU * n * 0.5 * t) *
+                        sc;
+                    const ser = [];
+                    a.forEach((v, i) => {
+                        if (v > 0)
+                            ser.push({
+                                f: mode(i + 1),
+                                color: "#cbd5e1",
+                                lw: 1,
+                                n: 200,
+                            });
+                    });
+                    ser.push({
+                        f: (x) => a.reduce((s, _, i) => s + mode(i + 1)(x), 0),
+                        color: "#2563eb",
+                        lw: 3,
+                        n: 200,
+                    });
+                    plot(
+                        c1,
+                        [-0.1, 2.1, -2.2, 2.2],
+                        [
+                            ...ser,
+                            { vline: 0, color: "#94a3b8" },
+                            { vline: L, color: "#94a3b8" },
+                        ],
+                    );
+                    plot(
+                        c2,
+                        [0, 3, -tot - 0.2, tot + 0.2],
+                        [
+                            {
+                                f: (tau) =>
+                                    a.reduce(
+                                        (s, v, i) =>
+                                            s +
+                                            v * Math.cos(TAU * (i + 1) * tau),
+                                        0,
+                                    ),
+                                color: "#7c3aed",
+                                n: 600,
+                            },
+                        ],
+                    );
+                    const bars = [];
+                    a.forEach((v, i) => {
+                        if (v > 0) bars.push([(i + 1) * f1, v]);
+                    });
+                    plot(
+                        c3,
+                        [0, 3800, 0, 1.15],
+                        [{ bars, color: "#dc2626", r: 5 }],
+                    );
+                    info.innerHTML = `1er : la corde (gris = chaque mode, bleu = leur somme), fixée aux deux bouts<br>2e : forme d’onde du son sur 3 périodes (violet) : le timbre = la forme de ce signal périodique<br>3e : spectre de raies (Hz) : pics en f₁, 2f₁, 3f₁… de hauteurs a_n<br>f₁ = 220/L = ${f1.toFixed(1)} Hz   (L ÷ 2 ⇒ f₁ × 2 = une octave plus aigu)`;
+                },
+                note: "Hauteur de la note = fondamentale f₁ = c/2L (corde plus courte → plus aigu). Timbre = dosage des harmoniques n·f₁ (les coefficients a_n). Deux instruments jouent la même note quand ils ont le même f₁ mais pas les mêmes a_n.",
+            });
+
+            /* ============ Ch.3b intervalles & comma ============ */
+            section({
+                id: "gamme",
+                nav: "3b Gamme",
+                title: "Ch.3 · Consonance, quintes empilées et comma pythagoricien",
+                intro: "Deux notes sonnent « bien » ensemble quand leur rapport de fréquences est une fraction simple : le signal total se répète vite. Haut : somme de deux sinusoïdes de rapport r. Bas : on empile k quintes (×3/2), on ramène dans l’octave (÷2) et on compare à la gamme tempérée.",
+                controls: [
+                    {
+                        id: "r",
+                        type: "select",
+                        label: "rapport",
+                        opts: [
+                            ["2", "octave 2/1"],
+                            ["1.5", "quinte 3/2"],
+                            ["1.3333333", "quarte 4/3"],
+                            ["1.25", "tierce majeure 5/4"],
+                            ["1.4983071", "quinte tempérée 2^(7/12)"],
+                            ["1.4142136", "triton √2 (dissonant)"],
+                        ],
+                        val: "1.5",
+                    },
+                    {
+                        type: "button",
+                        label: "▶ écouter les 2 notes",
+                        fn: (V) => play([220, 220 * V.r], [1, 1], 2),
+                    },
+                    {
+                        id: "k",
+                        label: "nombre de quintes empilées",
+                        min: 0,
+                        max: 12,
+                        step: 1,
+                        val: 7,
+                    },
+                ],
+                canvases: [170, 140],
+                update: (V, [c1, c2], info) => {
+                    const r = +V.r;
+                    plot(
+                        c1,
+                        [0, 4, -2.3, 2.3],
+                        [
+                            {
+                                f: (t) =>
+                                    Math.sin(TAU * t) + Math.sin(TAU * r * t),
+                                color: "#7c3aed",
+                                n: 1000,
+                            },
+                        ],
+                    );
+                    const ser = [
+                        { vline: 1, color: "#334155", lw: 1 },
+                        { vline: 2, color: "#334155", lw: 1 },
+                    ];
+                    for (let j = 0; j <= V.k; j++) {
+                        let p = 1.5 ** j;
+                        while (p >= 2) p /= 2;
+                        const q = 2 ** (((7 * j) % 12) / 12);
+                        ser.push(
+                            { dot: [p, 0.35], color: "#2563eb", r: 6 },
+                            { text: j, at: [p, 0.62], color: "#2563eb" },
+                            { dot: [q, -0.35], color: "#f97316", r: 6 },
+                            { text: j, at: [q, -0.65], color: "#f97316" },
+                        );
+                    }
+                    plot(c2, [0.97, 2.03, -1, 1], ser);
+                    const cm = 1.5 ** 12 / 128;
+                    info.innerHTML = `haut : période commune courte ⇒ consonant. Plus le rapport est « compliqué », plus le motif met du temps à se répéter.<br>bas : bleu = pythagoricien (empile ×3/2), orange = tempéré (2^(7k/12)). À k=12 le bleu ne retombe pas sur 1.<br>(3/2)^12 = ${(1.5 ** 12).toFixed(3)} vs 2^7 = 128 → écart ${cm.toFixed(4)} ≈ ${(1200 * Math.log2(cm)).toFixed(1)} cents (= le comma). Tempéré : r = 2^(1/12) = ${(2 ** (1 / 12)).toFixed(4)}`;
+                },
+                note: "Rapports simples ⇒ harmoniques partagés ⇒ consonance. 12 quintes ne font pas exactement 7 octaves ((3/2)^12 ≈ 129,75 ≠ 128) : c’est le comma. La gamme tempérée coupe l’octave en 12 pas égaux de rapport 2^(1/12) et supprime ce défaut.",
+            });
+
+            /* ============ Ch.4 transformée de Fourier ============ */
+            const SIG5 = {
+                porte: (t, w) => (Math.abs(t) < w / 2 ? 1 : 0),
+                gauss: (t, w) => Math.exp((-t * t) / (2 * (w / 2) ** 2)),
+                sinus: (t, w) =>
+                    Math.abs(t) < w / 2 ? Math.cos(TAU * 2 * t) : 0,
+                tri: (t, w) => Math.max(0, 1 - Math.abs(t) / (w / 2)),
+            };
+            section({
+                id: "tf",
+                nav: "4 Transformée",
+                title: "Ch.4 · Transformée de Fourier : la même idée pour un signal qui n’est pas périodique",
+                intro: "Pas de période ⇒ on teste <b>toutes</b> les fréquences f : ŝ(f)=∫ s(t) e^{−2iπft} dt. En haut le signal, en bas son |ŝ(f)| (bleu : « combien ça vibre à la fréquence f ») et la partie réelle (orange). Joue sur la <b>largeur</b> et le <b>retard</b>.",
+                controls: [
+                    {
+                        id: "sig",
+                        type: "select",
+                        label: "signal",
+                        opts: [
+                            ["porte", "porte → sinus cardinal"],
+                            ["gauss", "gaussienne → gaussienne"],
+                            ["sinus", "sinusoïde de 2 Hz coupée"],
+                            ["tri", "triangle"],
+                        ],
+                    },
+                    {
+                        id: "w",
+                        label: "largeur w",
+                        min: 0.2,
+                        max: 6,
+                        step: 0.1,
+                        val: 1,
+                    },
+                    {
+                        id: "t0",
+                        label: "retard t₀",
+                        min: -3,
+                        max: 3,
+                        step: 0.1,
+                        val: 0,
+                    },
+                ],
+                canvases: [170, 210],
+                update: (V, [c1, c2], info) => {
+                    const s = (t) => SIG5[V.sig](t - V.t0, V.w),
+                        dt = 0.02,
+                        ts = [],
+                        vs = [];
+                    for (let t = -12; t < 12; t += dt) {
+                        ts.push(t);
+                        vs.push(s(t));
+                    }
+                    const fs = [],
+                        re = [],
+                        mod = [];
+                    for (let i = 0; i <= 200; i++) {
+                        const f = -4 + (8 * i) / 200;
+                        let a = 0,
+                            b = 0;
+                        for (let j = 0; j < ts.length; j++) {
+                            const v = vs[j];
+                            if (v) {
+                                a += v * Math.cos(TAU * f * ts[j]);
+                                b -= v * Math.sin(TAU * f * ts[j]);
+                            }
+                        }
+                        a *= dt;
+                        b *= dt;
+                        fs.push(f);
+                        re.push(a);
+                        mod.push(Math.hypot(a, b));
+                    }
+                    const ym = Math.max(...mod, 0.1) * 1.15;
+                    plot(
+                        c1,
+                        [-6, 6, -1.4, 1.4],
+                        [{ f: s, color: "#94a3b8", n: 1200 }],
+                    );
+                    plot(
+                        c2,
+                        [-4, 4, -ym, ym],
+                        [
+                            {
+                                pts: fs.map((f, i) => [f, re[i]]),
+                                color: "#f97316",
+                                lw: 1.5,
+                            },
+                            {
+                                pts: fs.map((f, i) => [f, mod[i]]),
+                                color: "#2563eb",
+                                area: true,
+                            },
+                        ],
+                    );
+                    info.innerHTML = `ŝ(0) = ${mod[100].toFixed(3)} = aire algébrique du signal<br>Bleu |ŝ| : ne change pas quand tu bouges le retard t₀ (juste la phase change, donc la courbe orange). Réduis w : le spectre s’étale. Augmente w : il se resserre.`;
+                },
+                note: "Étroit en temps ⇔ large en fréquence (et inversement). Porte ↔ sinus cardinal, gaussienne ↔ gaussienne, sinusoïde fenêtrée → deux bosses en ±2 Hz (si la fenêtre devient infinie, ce sont deux Dirac, voir Ch.6). Retarder un signal ne change que la phase du spectre, pas son module. Un signal réel a un |ŝ| symétrique (pair).",
+            });
+
+            /* ============ Ch.5 convolution ============ */
+            const N6 = 500,
+                du6 = 0.02,
+                R6 = rng(7),
+                nz6 = Array.from({ length: N6 }, () => gauss(R6));
+            const B6 = {
+                bruit: (u) => 1.2 * Math.sin(TAU * 0.3 * u),
+                saut: (u) => (u < 5 ? 0 : 1.5),
+                creneau: (u) => (Math.floor(u / 1.7) % 2 ? 1 : -1) * 1.2,
+            };
+            section({
+                id: "conv",
+                nav: "5 Convolution",
+                title: "Ch.5 · Convolution : une moyenne glissante pondérée",
+                intro: "On fait glisser un « noyau » (orange : porte ou gaussienne) le long du signal bruité (gris). À chaque position t, le résultat est la <b>moyenne pondérée</b> du signal autour de t. En bas, le résultat se construit au fur et à mesure.",
+                controls: [
+                    {
+                        id: "sig",
+                        type: "select",
+                        label: "signal",
+                        opts: [
+                            ["bruit", "sinus + bruit"],
+                            ["saut", "marche + bruit"],
+                            ["creneau", "créneau + bruit"],
+                        ],
+                    },
+                    {
+                        id: "ker",
+                        type: "select",
+                        label: "noyau",
+                        opts: [
+                            ["porte", "porte"],
+                            ["gauss", "gaussienne"],
+                        ],
+                    },
+                    {
+                        id: "w",
+                        label: "largeur du noyau",
+                        min: 0.1,
+                        max: 3,
+                        step: 0.05,
+                        val: 0.8,
+                    },
+                    {
+                        id: "noise",
+                        label: "bruit",
+                        min: 0,
+                        max: 1.5,
+                        step: 0.1,
+                        val: 0.7,
+                    },
+                    {
+                        id: "t",
+                        label: "position t",
+                        min: 0,
+                        max: 10,
+                        step: 0.05,
+                        val: 3,
+                    },
+                    { id: "play", type: "check", label: "▶ animer" },
+                ],
+                canvases: [200, 180],
+                anim: true,
+                animIf: (V) => V.play,
+                update: (V, [c1, c2], info) => {
+                    const w = V.w,
+                        h = Array.from(
+                            { length: N6 },
+                            (_, i) => B6[V.sig](i * du6) + V.noise * nz6[i],
+                        ),
+                        sg = w / 2,
+                        pt = V.ker === "porte";
+                    const K = pt
+                        ? (x) => (Math.abs(x) < w / 2 ? 1 / w : 0)
+                        : (x) =>
+                              Math.exp((-x * x) / (2 * sg * sg)) /
+                              (sg * Math.sqrt(TAU));
+                    const m = Math.ceil((pt ? w / 2 : 3.5 * sg) / du6);
+                    const r = h.map((_, i) => {
+                        let a = 0;
+                        for (
+                            let j = Math.max(0, i - m);
+                            j <= Math.min(N6 - 1, i + m);
+                            j++
+                        )
+                            a += h[j] * K((i - j) * du6);
+                        return a * du6;
+                    });
+                    const tt = V.play ? (V.time * 1.2) % 10 : V.t,
+                        idx = Math.min(N6 - 1, Math.round(tt / du6)),
+                        sc = 1.6 / K(0),
+                        span = pt ? w / 2 : 3.5 * sg;
+                    const kp = pt
+                        ? [
+                              [tt - w / 2, 0],
+                              [tt - w / 2, sc / w],
+                              [tt + w / 2, sc / w],
+                              [tt + w / 2, 0],
+                          ]
+                        : Array.from({ length: 81 }, (_, i) => {
+                              const x = tt - span + (2 * span * i) / 80;
+                              return [x, sc * K(x - tt)];
+                          });
+                    plot(
+                        c1,
+                        [0, 10, -3, 3],
+                        [
+                            {
+                                pts: h.map((v, i) => [i * du6, v]),
+                                color: "#94a3b8",
+                                lw: 1.2,
+                            },
+                            { pts: kp, color: "#f97316", area: true },
+                            { vline: tt, color: "#f97316", lw: 1 },
+                        ],
+                    );
+                    plot(
+                        c2,
+                        [0, 10, -3, 3],
+                        [
+                            {
+                                pts: r.map((v, i) => [i * du6, v]),
+                                color: "#bfdbfe",
+                                lw: 2,
+                            },
+                            {
+                                pts: r
+                                    .slice(0, idx + 1)
+                                    .map((v, i) => [i * du6, v]),
+                                color: "#2563eb",
+                                lw: 3,
+                            },
+                            { dot: [tt, r[idx]], color: "#dc2626" },
+                        ],
+                    );
+                    info.innerHTML = `(s⋆h)(t) en t=${tt.toFixed(2)} : ${r[idx].toFixed(3)} = moyenne du signal gris sous le noyau orange<br>Noyau large ⇒ très lisse (mais détails écrasés, un saut devient une rampe). Noyau étroit ⇒ proche du signal d’origine.`;
+                },
+                note: "Convolution = glisser un noyau et faire une moyenne pondérée. Ça lisse et ça enlève le bruit, au prix d’un flou : ne lisse pas trop. Une « moyenne glissante sur 7 jours » est une convolution par une porte de largeur 7 et de hauteur 1/7.",
+            });
+
+            /* ============ Ch.6a Dirac ============ */
+            section({
+                id: "dirac",
+                nav: "6a Dirac",
+                title: "Ch.6 · Le Dirac : la gaussienne qui s’affine à l’infini",
+                intro: "Prends une gaussienne d’aire 1 et réduis σ. Elle devient un pic de plus en plus haut et fin, mais l’aire reste 1 : à la limite c’est un <b>Dirac δ₀</b> (impulsion). En bas, sa transformée de Fourier devient plate, égale à 1.",
+                controls: [
+                    {
+                        id: "s",
+                        label: "σ",
+                        min: 0.05,
+                        max: 1.5,
+                        step: 0.01,
+                        val: 1,
+                    },
+                ],
+                canvases: [170, 150],
+                update: (V, [c1, c2], info) => {
+                    const s = V.s;
+                    plot(
+                        c1,
+                        [-3, 3, -0.3, 8.5],
+                        [
+                            {
+                                f: (t) =>
+                                    Math.exp((-t * t) / (2 * s * s)) /
+                                    (s * Math.sqrt(TAU)),
+                                area: true,
+                                n: 1500,
+                            },
+                        ],
+                    );
+                    plot(
+                        c2,
+                        [-6, 6, -0.1, 1.2],
+                        [
+                            {
+                                f: (f) =>
+                                    Math.exp(-2 * Math.PI ** 2 * s * s * f * f),
+                                color: "#dc2626",
+                                area: true,
+                            },
+                        ],
+                    );
+                    info.innerHTML = `haut : g_σ(t) normalisée, aire = 1 (toujours), hauteur = ${(1 / (s * Math.sqrt(TAU))).toFixed(2)}<br>bas : sa TF e^(−2π²σ²f²) → quand σ→0 elle tend vers la constante 1 : TF(δ₀) = 1 (toutes les fréquences à poids égal)`;
+                },
+                note: "δ₀ n’est pas une vraie fonction : c’est un outil, caractérisé par ∫ δₓ(t)f(t)dt = f(x). Il vérifie s⋆δ₀ = s (élément neutre de la convolution), TF(δ₀)=1, TF(e^{2iπf₀t}) = δ_{f₀}, et TF(cos 2πf₀t) = ½(δ_{f₀}+δ_{−f₀}). Une sinusoïde pure = 2 pics dans le spectre.",
+            });
+
+            /* ============ Ch.6b spectre de raies ============ */
+            const R7 = rng(3),
+                nz7 = Array.from({ length: 2000 }, () => gauss(R7));
+            section({
+                id: "raies",
+                nav: "6b Raies",
+                title: "Ch.6 · Signal périodique bruité : spectre de raies (« peigne de Dirac »)",
+                intro: "Un signal périodique (somme de sinus de fréquences f₀, 2f₀, 3f₀…) plus du bruit. Dans le temps, le bruit cache tout. Dans le spectre, les pics émergent nettement au-dessus du plancher de bruit.",
+                controls: [
+                    {
+                        id: "f0",
+                        label: "fréquence f₀ (Hz)",
+                        min: 1,
+                        max: 5,
+                        step: 0.5,
+                        val: 2,
+                    },
+                    {
+                        id: "H",
+                        label: "nb d’harmoniques",
+                        min: 1,
+                        max: 5,
+                        step: 1,
+                        val: 3,
+                    },
+                    {
+                        id: "D",
+                        label: "durée observée D (s)",
+                        min: 1,
+                        max: 20,
+                        step: 1,
+                        val: 6,
+                    },
+                    {
+                        id: "nz",
+                        label: "bruit",
+                        min: 0,
+                        max: 2,
+                        step: 0.1,
+                        val: 0.8,
+                    },
+                ],
+                canvases: [170, 200],
+                update: (V, [c1, c2], info) => {
+                    const fs = 100,
+                        n = Math.round(V.D * fs),
+                        x = Array.from({ length: n }, (_, i) => {
+                            const t = i / fs;
+                            let v = 0;
+                            for (let k = 1; k <= V.H; k++)
+                                v += Math.sin(TAU * k * V.f0 * t) / k;
+                            return v + V.nz * nz7[i];
+                        });
+                    plot(
+                        c1,
+                        [0, 3, -4.5, 4.5],
+                        [
+                            {
+                                pts: x.slice(0, 300).map((v, i) => [i / fs, v]),
+                                color: "#94a3b8",
+                                lw: 1.2,
+                            },
+                        ],
+                    );
+                    const pts = [];
+                    for (let f = 0; f <= 12; f += 0.04) {
+                        let a = 0,
+                            b = 0;
+                        for (let i = 0; i < n; i++) {
+                            const t = i / fs;
+                            a += x[i] * Math.cos(TAU * f * t);
+                            b -= x[i] * Math.sin(TAU * f * t);
+                        }
+                        pts.push([f, Math.hypot(a, b) / n]);
+                    }
+                    const ex = [];
+                    for (let k = 1; k <= V.H; k++) ex.push([k * V.f0, 0]);
+                    plot(
+                        c2,
+                        [0, 12, 0, 0.7],
+                        [{ pts, color: "#2563eb", area: true }],
+                    );
+                    info.innerHTML = `T = 1/f₀ = ${(1 / V.f0).toFixed(2)} s. Pics attendus en ${Array.from({ length: V.H }, (_, k) => (k + 1) * V.f0).join(", ")} Hz, de hauteur ≈ |c_n| = 1/(2n).<br>Augmente D : les pics s’affinent (vers de vrais Dirac). Augmente le bruit : le plancher monte, les pics restent. Pour débruiter : garder les pics, annuler le reste.`;
+                },
+                note: "TF d’un signal T-périodique = Σ c_n δ_{n/T} : des pics espacés de 1/T, de hauteurs c_n (les coefficients de Fourier). C’est le lien entre série de Fourier (Ch.2) et transformée de Fourier (Ch.4). Le bruit blanc, lui, s’étale sur toutes les fréquences.",
+            });
+
+            /* ============ Ch.7 filtrage ============ */
+            const N8 = 512,
+                D8 = 4,
+                R8 = rng(11),
+                n8 = Array.from({ length: N8 }, () => gauss(R8));
+            const C8 = Array.from({ length: N8 }, (_, m) =>
+                    Math.cos((TAU * m) / N8),
+                ),
+                S8 = Array.from({ length: N8 }, (_, m) =>
+                    Math.sin((TAU * m) / N8),
+                );
+            section({
+                id: "filtre",
+                nav: "7 Filtrage",
+                title: "Ch.7 · Filtrer = multiplier le spectre par un gain",
+                intro: "Signal = deux sinus (3 Hz et 7 Hz) + bruit. On passe en fréquences (TF), on <b>multiplie</b> par le gain ĥ(f) du filtre (orange), puis on revient dans le temps (TF inverse). C’est exactement s⋆h = ITF(ŝ·ĥ).",
+                controls: [
+                    {
+                        id: "type",
+                        type: "select",
+                        label: "filtre",
+                        opts: [
+                            ["bas", "passe-bas"],
+                            ["haut", "passe-haut"],
+                            ["bande", "passe-bande"],
+                        ],
+                    },
+                    {
+                        id: "form",
+                        type: "select",
+                        label: "forme du gain",
+                        opts: [
+                            ["ideal", "idéal (porte)"],
+                            ["gauss", "doux (gaussien)"],
+                        ],
+                    },
+                    {
+                        id: "fc",
+                        label: "fréquence fc (Hz)",
+                        min: 1,
+                        max: 40,
+                        step: 1,
+                        val: 10,
+                    },
+                    {
+                        id: "bw",
+                        label: "demi-bande (bande)",
+                        min: 1,
+                        max: 10,
+                        step: 1,
+                        val: 3,
+                    },
+                    {
+                        id: "noise",
+                        label: "bruit",
+                        min: 0,
+                        max: 2,
+                        step: 0.1,
+                        val: 0.8,
+                    },
+                ],
+                canvases: [200, 210],
+                update: (V, [c1, c2], info) => {
+                    const x = Array.from({ length: N8 }, (_, n) => {
+                        const t = (n * D8) / N8;
+                        return (
+                            2 * Math.sin(TAU * 3 * t) +
+                            Math.sin(TAU * 7 * t) +
+                            V.noise * n8[n]
+                        );
+                    });
+                    const Xr = [],
+                        Xi = [];
+                    for (let k = 0; k < N8; k++) {
+                        let a = 0,
+                            b = 0;
+                        for (let n = 0; n < N8; n++) {
+                            const m = (k * n) % N8;
+                            a += x[n] * C8[m];
+                            b -= x[n] * S8[m];
+                        }
+                        Xr.push(a);
+                        Xi.push(b);
+                    }
+                    const fc = V.fc,
+                        bw = V.bw,
+                        id = V.form === "ideal";
+                    const G = (f) =>
+                        V.type === "bas"
+                            ? id
+                                ? f <= fc
+                                    ? 1
+                                    : 0
+                                : Math.exp((-f * f) / (2 * fc * fc))
+                            : V.type === "haut"
+                              ? id
+                                  ? f >= fc
+                                      ? 1
+                                      : 0
+                                  : 1 - Math.exp((-f * f) / (2 * fc * fc))
+                              : id
+                                ? Math.abs(f - fc) <= bw
+                                    ? 1
+                                    : 0
+                                : Math.exp(-((f - fc) ** 2) / (2 * bw * bw));
+                    const Gk = Array.from({ length: N8 }, (_, k) =>
+                        G(Math.min(k, N8 - k) / D8),
+                    );
+                    const y = Array.from({ length: N8 }, (_, n) => {
+                        let a = 0;
+                        for (let k = 0; k < N8; k++) {
+                            if (!Gk[k]) continue;
+                            const m = (k * n) % N8;
+                            a += Gk[k] * (Xr[k] * C8[m] - Xi[k] * S8[m]);
+                        }
+                        return a / N8;
+                    });
+                    const T = (n) => (n * D8) / N8;
+                    plot(
+                        c1,
+                        [0, 2, -6, 6],
+                        [
+                            {
+                                pts: x.slice(0, 256).map((v, i) => [T(i), v]),
+                                color: "#cbd5e1",
+                                lw: 1.2,
+                            },
+                            {
+                                pts: y.slice(0, 256).map((v, i) => [T(i), v]),
+                                color: "#2563eb",
+                                lw: 2.5,
+                            },
+                        ],
+                    );
+                    const sp = [],
+                        spf = [],
+                        gn = [];
+                    let e0 = 0,
+                        e1 = 0;
+                    for (let k = 1; k <= 160; k++) {
+                        const a = (2 * Math.hypot(Xr[k], Xi[k])) / N8,
+                            f = k / D8;
+                        sp.push([f, a]);
+                        spf.push([f, a * Gk[k]]);
+                        gn.push([f, Gk[k] * 2.2]);
+                        e0 += a * a;
+                        e1 += (a * Gk[k]) ** 2;
+                    }
+                    plot(
+                        c2,
+                        [0, 40, 0, 2.4],
+                        [
+                            { pts: sp, color: "#9ca3af", area: true },
+                            { pts: spf, color: "#2563eb", lw: 2 },
+                            { pts: gn, color: "#f97316", dash: [5, 4], lw: 2 },
+                        ],
+                    );
+                    info.innerHTML = `haut : signal bruité (gris clair) et signal filtré (bleu)<br>bas : spectre |ŝ(f)| (gris), gain du filtre ĥ(f) (orange pointillé, échelle ×2,2), spectre filtré (bleu)<br>énergie conservée : ${((100 * e1) / e0).toFixed(1)} %   — essaie passe-bas, fc=10 : les 2 pics (3 et 7 Hz) passent, le bruit au-dessus disparaît.`;
+                },
+                note: "Un filtre est une convolution s ↦ s⋆h, et sa TF est ŝ·ĥ : le gain ĥ(f) dit quelles fréquences passent. Passe-bas : garde les graves et lisse. Passe-haut : garde les détails. Passe-bande : garde une zone. Le gain « idéal » coupe net mais crée des oscillations dans le temps (son h est un sinus cardinal) ; le gain doux est plus propre.",
+            });
+        </script>
+    </body>
+</html>
